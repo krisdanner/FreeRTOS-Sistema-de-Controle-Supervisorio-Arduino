@@ -81,10 +81,15 @@ void setup() {
   meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
   meuServo.write(0);   // Define a posição inicial do servo motor para 0 graus
 
-  showMenu();
+  // Definição das Tarefas
+  xTaskCreate(tarefaPotServo, "tarefaPotServo", 256, NULL, 1, NULL);
+  xTaskCreate(tarefaTempHum, "tarefaTempHum", 256, NULL, 1, NULL);
+
+  //showMenu();
 }
 
 void loop() {
+  /*
   if (!digitalRead(BTN_UP)) {
     menuIndex = (menuIndex - 1 + menuSize) % menuSize;  // Navegar para cima
     delay(200);                                         // Debounce
@@ -238,6 +243,17 @@ void executeOption(int index) {
       lcd.print(backlightState ? "Backlight On" : "Backlight Off");
       delay(1000);
       break;
+  }
+*/
+}
+
+void tarefaPotServo(void *pvParametros) {
+
+  }
+}
+
+void tarefaTempHum(void *pvParametros) {
+
   }
 }
 
