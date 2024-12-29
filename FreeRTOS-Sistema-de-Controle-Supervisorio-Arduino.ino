@@ -57,6 +57,7 @@ const char *menuOptions[] = {
 const int menuSize = sizeof(menuOptions) / sizeof(menuOptions[0]);
 
 void setup() {
+
   // Inicializa o monitor serial
   Serial.begin(9600);
 
@@ -82,8 +83,11 @@ void setup() {
   //euServo.write(0);   // Define a posição inicial do servo motor para 0 graus
 
   // Definição das Tarefas
-  xTaskCreate(tarefaPotServo, "tarefaPotServo", 128, NULL, 5, NULL); // 1 - prioridade mín, 5 - prioridade máx
-  xTaskCreate(tarefaTempUmi, "tarefaTempUmi", 512, NULL, 4, NULL);
+  xTaskCreate(tarefaPotServo, "tarefaPotServo", 80, NULL, 5, NULL);  // 1 - prioridade mín, 5 - prioridade máx // palavra = 1 byte // máx de palavras na memória = 1000
+  xTaskCreate(tarefaTempUmi, "tarefaTempUmi", 400, NULL, 4, NULL);
+
+  // Cria a tarefa de monitoramento
+  //xTaskCreate(TaskMonitor, "Monitor", 128, NULL, 4, NULL);
 
   //showMenu();
 }
@@ -262,8 +266,8 @@ void tarefaPotServo() {
     val = analogRead(potPin);         // Lê o valor do potenciômetro (0 a 1023)
     val = constrain(val, 0, 1023);    // Garante que o valor fique entre 0 e 1023
     pos = map(val, 0, 1023, 0, 180);  // Mapeia o valor do potenciômetro para a faixa de 0 a 180 graus
-    meuServo.write(pos); // Define a posição do servo motor
-    /*
+    meuServo.write(pos);              // Define a posição do servo motor
+    
     Serial.print("Pot: ");
     Serial.print(val);
     Serial.print(" / Pos: ");
@@ -283,6 +287,19 @@ void tarefaPotServo() {
 
     //delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
     vTaskDelay(pdMS_TO_TICKS(10));
+
+    for (;;) {
+    // Obtém o High Water Mark da tarefa "TaskExample"
+    UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+    // Calcula a memória utilizada (em palavras da pilha)
+    Serial.print("Espaço mínimo livre na pilha: ");
+    Serial.print(highWaterMark);
+    Serial.println(" palavras");
+
+    // Aguarda 2 segundos antes de monitorar novamente
+    vTaskDelay(pdMS_TO_TICKS(2000));
+  }
   }
 }
 
@@ -291,34 +308,52 @@ void tarefaTempUmi() {
 
   while (1) {
 
-        float temp = dht.readTemperature();
-        float hum = dht.readHumidity();
+    float temp = dht.readTemperature();
+    float hum = dht.readHumidity();
 
-        if (isnan(temp) || isnan(hum)) {
-          Serial.println(F("Failed to read from DHT sensor!")); //Por padrão, strings literais são armazenadas na RAM, mas usando F(), a string é mantida na memória de programa (flash), que geralmente é mais abundante que a RAM no Arduino.
-          return;
-        }
-        
-        Serial.print("Umidade: ");
-        Serial.print(hum);
-        Serial.print(" / Temperatura: ");
-        Serial.print(temp);
-        Serial.println("°C");
-        /*
-        lcd.setCursor(0, 0);
-        lcd.print("Temp.: ");
-        lcd.print("         ");
-        lcd.setCursor(7, 0);
-        lcd.print(temp);
-        lcd.print(" C");
-        lcd.setCursor(0, 1);
-        lcd.print("Umid.: ");
-        lcd.print("         ");
-        lcd.setCursor(7, 1);
-        lcd.print(hum);
-        lcd.print(" %");
-        */
-        vTaskDelay(pdMS_TO_TICKS(10));
-      }
+    if (isnan(temp) || isnan(hum)) {
+      Serial.println(F("Failed to read from DHT sensor!"));  //Por padrão, strings literais são armazenadas na RAM, mas usando F(), a string é mantida na memória de programa (flash), que geralmente é mais abundante que a RAM no Arduino.
+      return;
+    }
+    /*
+    Serial.print("Umidade: ");
+    Serial.print(hum);
+    Serial.print(" / Temperatura: ");
+    Serial.print(temp);
+    Serial.println("°C");
+    /*
+    lcd.setCursor(0, 0);
+    lcd.print("Temp.: ");
+    lcd.print("         ");
+    lcd.setCursor(7, 0);
+    lcd.print(temp);
+    lcd.print(" C");
+    lcd.setCursor(0, 1);
+    lcd.print("Umid.: ");
+    lcd.print("         ");
+    lcd.setCursor(7, 1);
+    lcd.print(hum);
+    lcd.print(" %");
+    */
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
 }
+
+/*
+void TaskMonitor(void *pvParameters) {
+  for (;;) {
+    // Obtém o High Water Mark da tarefa "TaskExample"
+    UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+    // Calcula a memória utilizada (em palavras da pilha)
+    Serial.print("Espaço mínimo livre na pilha: ");
+    Serial.print(highWaterMark);
+    Serial.println(" palavras");
+
+    // Aguarda 2 segundos antes de monitorar novamente
+    vTaskDelay(pdMS_TO_TICKS(2000));
+  }
+}
+*/
+
 
