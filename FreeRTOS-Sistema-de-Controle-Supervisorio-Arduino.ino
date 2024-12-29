@@ -38,10 +38,10 @@ bool ledAmareloState = false;
 bool backlightState = true;
 
 // Servo
-Servo meuServo;   // Cria um objeto Servo para controlar o servo motor
-int pos;          // Variável para armazenar a posição do servo motor
-int potPin = A0;  // Pino analógico onde o potenciômetro está conectado
-int val;          // Variável para armazenar o valor lido do potenciômetro
+//Servo meuServo;   // Cria um objeto Servo para controlar o servo motor
+//int pos;          // Variável para armazenar a posição do servo motor
+//int potPin = A0;  // Pino analógico onde o potenciômetro está conectado
+//int val;          // Variável para armazenar o valor lido do potenciômetro
 
 // Menu
 int menuIndex = 0;
@@ -58,31 +58,32 @@ const int menuSize = sizeof(menuOptions) / sizeof(menuOptions[0]);
 
 void setup() {
   // Inicializa o monitor serial
-  //Serial.begin(9600);
+  Serial.begin(9600);
 
   //lcd.init();
-  //lcd.backlight();
-  dht.begin();
+  //lcd.noBacklight();
+  //lcd.noDisplay();
+  //dht.begin();
 
-  pinMode(RELE_PIN, OUTPUT);
-  pinMode(LED_VERMELHO, OUTPUT);
-  pinMode(LED_AMARELO, OUTPUT);
-  digitalWrite(RELE_PIN, LOW);
-  digitalWrite(LED_VERMELHO, LOW);
-  digitalWrite(LED_AMARELO, LOW);
+  //pinMode(RELE_PIN, OUTPUT);
+  //pinMode(LED_VERMELHO, OUTPUT);
+  //pinMode(LED_AMARELO, OUTPUT);
+  //digitalWrite(RELE_PIN, LOW);
+  //digitalWrite(LED_VERMELHO, LOW);
+  //digitalWrite(LED_AMARELO, LOW);
 
   // Configuração dos botões
-  pinMode(BTN_UP, INPUT_PULLUP);
-  pinMode(BTN_DOWN, INPUT_PULLUP);
-  pinMode(BTN_SELECT, INPUT_PULLUP);
-  pinMode(BTN_BACK, INPUT_PULLUP);
+  //pinMode(BTN_UP, INPUT_PULLUP);
+  //pinMode(BTN_DOWN, INPUT_PULLUP);
+  //pinMode(BTN_SELECT, INPUT_PULLUP);
+  //pinMode(BTN_BACK, INPUT_PULLUP);
 
   //meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
   //euServo.write(0);   // Define a posição inicial do servo motor para 0 graus
 
   // Definição das Tarefas
-  xTaskCreate(tarefaPotServo, "tarefaPotServo", 256, NULL, 1, NULL);
-  xTaskCreate(tarefaTempHum, "tarefaTempHum", 256, NULL, 1, NULL);
+  xTaskCreate(tarefaPotServo, "tarefaPotServo", 128, NULL, 5, NULL); // 1 - prioridade mín, 5 - prioridade máx
+  xTaskCreate(tarefaTempUmi, "tarefaTempUmi", 512, NULL, 4, NULL);
 
   //showMenu();
 }
@@ -246,46 +247,64 @@ void executeOption(int index) {
 */
 }
 
-void tarefaPotServo(void *pvParametros) {
-  
-  Serial.begin(9600);
+
+void tarefaPotServo() {
+
+  Servo meuServo;   // Cria um objeto Servo para controlar o servo motor
+  int pos;          // Variável para armazenar a posição do servo motor
+  int potPin = A0;  // Pino analógico onde o potenciômetro está conectado
+  int val;          // Variável para armazenar o valor lido do potenciômetro
+
   meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
   meuServo.write(0);   // Define a posição inicial do servo motor para 0 graus
 
-   while (true) {
-        val = analogRead(potPin);         // Lê o valor do potenciômetro (0 a 1023)
-        val = constrain(val, 0, 1023);    // Garante que o valor fique entre 0 e 1023
-        pos = map(val, 0, 1023, 0, 180);  // Mapeia o valor do potenciômetro para a faixa de 0 a 180 graus
-        meuServo.write(pos);              // Define a posição do servo motor
-        Serial.print("Pot: ");
-        Serial.print(val);
-        Serial.print(" / Pos: ");
-        Serial.println(pos);
+  while (1) {
+    val = analogRead(potPin);         // Lê o valor do potenciômetro (0 a 1023)
+    val = constrain(val, 0, 1023);    // Garante que o valor fique entre 0 e 1023
+    pos = map(val, 0, 1023, 0, 180);  // Mapeia o valor do potenciômetro para a faixa de 0 a 180 graus
+    meuServo.write(pos); // Define a posição do servo motor
+    /*
+    Serial.print("Pot: ");
+    Serial.print(val);
+    Serial.print(" / Pos: ");
+    Serial.println(pos);
+    /*
+    lcd.setCursor(0, 0);  // Define o cursor na primeira linha
+    lcd.print("Potenc.: ");
+    lcd.print("       ");
+    lcd.setCursor(9, 0);
+    lcd.print(val);       // Exibe o texto formatado
+    lcd.setCursor(0, 1);  // Define o cursor na segunda linha
+    lcd.print("Pos. Servo: ");
+    lcd.print("    ");
+    lcd.setCursor(12, 1);
+    lcd.print(pos);  // Exibe o texto formatado
+    */
 
-        lcd.setCursor(0, 0);  // Define o cursor na primeira linha
-        lcd.print("Potenc.: ");
-        lcd.print("       ");
-        lcd.setCursor(9, 0);
-        lcd.print(val);       // Exibe o texto formatado
-        lcd.setCursor(0, 1);  // Define o cursor na segunda linha
-        lcd.print("Pos. Servo: ");
-        lcd.print("    ");
-        lcd.setCursor(12, 1);
-        lcd.print(pos);  // Exibe o texto formatado
-
-        delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
-      }
+    //delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
 }
 
-void tarefaTempHum(void *pvParametros) {
-  Serial.begin(9600);
-  while (true) {
+void tarefaTempUmi() {
+  dht.begin();
+
+  while (1) {
+
         float temp = dht.readTemperature();
         float hum = dht.readHumidity();
+
         if (isnan(temp) || isnan(hum)) {
           Serial.println(F("Failed to read from DHT sensor!")); //Por padrão, strings literais são armazenadas na RAM, mas usando F(), a string é mantida na memória de programa (flash), que geralmente é mais abundante que a RAM no Arduino.
           return;
         }
+        
+        Serial.print("Umidade: ");
+        Serial.print(hum);
+        Serial.print(" / Temperatura: ");
+        Serial.print(temp);
+        Serial.println("°C");
+        /*
         lcd.setCursor(0, 0);
         lcd.print("Temp.: ");
         lcd.print("         ");
@@ -298,11 +317,8 @@ void tarefaTempHum(void *pvParametros) {
         lcd.setCursor(7, 1);
         lcd.print(hum);
         lcd.print(" %");
-        Serial.print("Umidade: ");
-        Serial.print(hum);
-        Serial.print(" / Temperatura: ");
-        Serial.print(temp);
-        Serial.println("°C");
+        */
+        vTaskDelay(pdMS_TO_TICKS(10));
       }
 }
 
