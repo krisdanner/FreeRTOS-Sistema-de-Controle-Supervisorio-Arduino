@@ -270,7 +270,7 @@ void tarefaPotServo(void *pvParametros) {
 
         delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
 
-        if (!digitalRead(BTN_BACK)) break;  // Voltar ao menu
+        if (!digitalRead(BTN_BACK))
       }
 
 }
@@ -300,7 +300,7 @@ void tarefaTempHum(void *pvParametros) {
         Serial.print(" / Temperatura: ");
         Serial.print(temp);
         Serial.println("°C");
-        if (!digitalRead(BTN_BACK)) break;  // Voltar ao menu
+        if (!digitalRead(BTN_BACK))
       }
 }
 
