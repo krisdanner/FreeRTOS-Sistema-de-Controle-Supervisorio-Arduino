@@ -58,10 +58,10 @@ const int menuSize = sizeof(menuOptions) / sizeof(menuOptions[0]);
 
 void setup() {
   // Inicializa o monitor serial
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
-  lcd.init();
-  lcd.backlight();
+  //lcd.init();
+  //lcd.backlight();
   dht.begin();
 
   pinMode(RELE_PIN, OUTPUT);
@@ -77,8 +77,8 @@ void setup() {
   pinMode(BTN_SELECT, INPUT_PULLUP);
   pinMode(BTN_BACK, INPUT_PULLUP);
 
-  meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
-  meuServo.write(0);   // Define a posição inicial do servo motor para 0 graus
+  //meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
+  //euServo.write(0);   // Define a posição inicial do servo motor para 0 graus
 
   // Definição das Tarefas
   xTaskCreate(tarefaPotServo, "tarefaPotServo", 256, NULL, 1, NULL);
@@ -247,6 +247,11 @@ void executeOption(int index) {
 }
 
 void tarefaPotServo(void *pvParametros) {
+  
+  Serial.begin(9600);
+  meuServo.attach(6);  // Associa o servo motor ao pino digital 6 do Arduino
+  meuServo.write(0);   // Define a posição inicial do servo motor para 0 graus
+
    while (true) {
         val = analogRead(potPin);         // Lê o valor do potenciômetro (0 a 1023)
         val = constrain(val, 0, 1023);    // Garante que o valor fique entre 0 e 1023
@@ -269,13 +274,11 @@ void tarefaPotServo(void *pvParametros) {
         lcd.print(pos);  // Exibe o texto formatado
 
         delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
-
-        if (!digitalRead(BTN_BACK))
       }
-
 }
 
 void tarefaTempHum(void *pvParametros) {
+  Serial.begin(9600);
   while (true) {
         float temp = dht.readTemperature();
         float hum = dht.readHumidity();
@@ -300,7 +303,6 @@ void tarefaTempHum(void *pvParametros) {
         Serial.print(" / Temperatura: ");
         Serial.print(temp);
         Serial.println("°C");
-        if (!digitalRead(BTN_BACK))
       }
 }
 
