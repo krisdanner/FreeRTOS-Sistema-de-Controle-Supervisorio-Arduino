@@ -8,7 +8,6 @@
 #===========================================#
 */
 
-
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
@@ -248,12 +247,60 @@ void executeOption(int index) {
 }
 
 void tarefaPotServo(void *pvParametros) {
+   while (true) {
+        val = analogRead(potPin);         // Lê o valor do potenciômetro (0 a 1023)
+        val = constrain(val, 0, 1023);    // Garante que o valor fique entre 0 e 1023
+        pos = map(val, 0, 1023, 0, 180);  // Mapeia o valor do potenciômetro para a faixa de 0 a 180 graus
+        meuServo.write(pos);              // Define a posição do servo motor
+        Serial.print("Pot: ");
+        Serial.print(val);
+        Serial.print(" / Pos: ");
+        Serial.println(pos);
 
-  }
+        lcd.setCursor(0, 0);  // Define o cursor na primeira linha
+        lcd.print("Potenc.: ");
+        lcd.print("       ");
+        lcd.setCursor(9, 0);
+        lcd.print(val);       // Exibe o texto formatado
+        lcd.setCursor(0, 1);  // Define o cursor na segunda linha
+        lcd.print("Pos. Servo: ");
+        lcd.print("    ");
+        lcd.setCursor(12, 1);
+        lcd.print(pos);  // Exibe o texto formatado
+
+        delay(15);  // Aguarda um curto intervalo para estabilizar o movimento do servo
+
+        if (!digitalRead(BTN_BACK)) break;  // Voltar ao menu
+      }
+
 }
 
 void tarefaTempHum(void *pvParametros) {
-
-  }
+  while (true) {
+        float temp = dht.readTemperature();
+        float hum = dht.readHumidity();
+        if (isnan(temp) || isnan(hum)) {
+          Serial.println(F("Failed to read from DHT sensor!")); //Por padrão, strings literais são armazenadas na RAM, mas usando F(), a string é mantida na memória de programa (flash), que geralmente é mais abundante que a RAM no Arduino.
+          return;
+        }
+        lcd.setCursor(0, 0);
+        lcd.print("Temp.: ");
+        lcd.print("         ");
+        lcd.setCursor(7, 0);
+        lcd.print(temp);
+        lcd.print(" C");
+        lcd.setCursor(0, 1);
+        lcd.print("Umid.: ");
+        lcd.print("         ");
+        lcd.setCursor(7, 1);
+        lcd.print(hum);
+        lcd.print(" %");
+        Serial.print("Umidade: ");
+        Serial.print(hum);
+        Serial.print(" / Temperatura: ");
+        Serial.print(temp);
+        Serial.println("°C");
+        if (!digitalRead(BTN_BACK)) break;  // Voltar ao menu
+      }
 }
 
