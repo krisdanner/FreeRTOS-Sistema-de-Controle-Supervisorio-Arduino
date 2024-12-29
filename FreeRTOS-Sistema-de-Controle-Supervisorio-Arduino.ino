@@ -1,7 +1,19 @@
-#include <Servo.h>  // Inclui a biblioteca Servo para controlar servos
-#include <Wire.h>
+/*
+#===========================================#
+# FreeRTOS Sistema de Controle Suprvisório  #
+#===========================================#
+# Autor: Christian Danner Ramos de Carvalho #
+# Universidade Federal do Maranhão          #
+# 29/12/2024                                #
+#===========================================#
+*/
+
+
+#include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
+#include <Arduino_FreeRTOS.h>
+
 
 // Configurações do display LCD
 LiquidCrystal_I2C lcd(0x27, 16, 2);  // Endereço I2C do LCD
